@@ -1,0 +1,1 @@
+anutu, anûtu, tidslinje, sfären, sfärens fall, sulmu, Šulmu, maria, maria eriksson, isolde, henrique, Besättning, robert, Gaspard Villeneuve-Morel, gaspard, Professor Ekström, ekström, revolution, titan, mars, jorden, skepp, Henrique Saraiva, kapten, doktorand, löjtnant, pilot, Adrian Hayes, adrian, Mikael
