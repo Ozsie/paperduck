@@ -1,5 +1,5 @@
 ### Ask request
-GET http://localhost:8080/ask?question=Utifrån vad du vet om Isolde, vad skulle hon tycka om pannkakor med grädde och jordgubbssylt?
+GET http://localhost:8080/ask?tags=isolde,sulmu&question=Utifrån vad du vet om Isolde, vad skulle hon tycka om pannkakor med grädde och jordgubbssylt?
 
 
 ###

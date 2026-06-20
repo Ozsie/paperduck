@@ -15,7 +15,9 @@ class RouterConfiguration(
     @Bean
     fun askRouter(): RouterFunction<ServerResponse> = router {
         GET("/ask") { request ->
-            aiService.chat(request.paramOrNull("question") ?: "").let { ServerResponse.ok().body(it) }
+            val question = request.paramOrNull("question") ?: ""
+            val tags = (request.paramOrNull("tags") ?: "").split(",").toSet()
+            aiService.chat(question, tags).let { ServerResponse.ok().body(it) }
         }
     }
 }

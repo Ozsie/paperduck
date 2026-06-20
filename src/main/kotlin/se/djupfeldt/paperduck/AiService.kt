@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 class AiService(
     private val chatClient: ChatClient,
     private val writingTools: WritingTools,
-    private val context: ApplicationContext
+    context: ApplicationContext
 ) {
 
     private val availableTags = try {
