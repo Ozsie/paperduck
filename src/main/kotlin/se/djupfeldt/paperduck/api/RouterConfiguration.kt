@@ -24,5 +24,10 @@ class RouterConfiguration(
         GET("/tags") {
             ServerResponse.ok().body(tagService.getTags())
         }
+        PUT("/tags/{tag}") { request ->
+            val tag = request.pathVariable("tag")
+            tagService.addTag(tag)
+            ServerResponse.ok().body(tag)
+        }
     }
 }

@@ -32,6 +32,10 @@
         <div id="tags-area">
             <span>Loading tags...</span>
         </div>
+        <div id="add-tag-area">
+            <input type="text" id="new-tag" placeholder="New tag..." autocomplete="off">
+            <button id="add-tag-btn">Add Tag</button>
+        </div>
         <div id="input-area">
             <input type="text" id="question" placeholder="Ask a question..." autocomplete="off">
             <button id="send-btn">Send</button>
@@ -43,6 +47,8 @@
         const tagsArea = document.getElementById('tags-area');
         const questionInput = document.getElementById('question');
         const sendBtn = document.getElementById('send-btn');
+        const newTagInput = document.getElementById('new-tag');
+        const addTagBtn = document.getElementById('add-tag-btn');
 
         // Fetch and display tags
         async function loadTags() {
@@ -123,9 +129,33 @@
             }
         }
 
+        async function addTag() {
+            const tag = newTagInput.value.trim();
+            if (!tag) return;
+
+            try {
+                const response = await fetch(`/tags/${encodeURIComponent(tag)}`, {
+                    method: 'PUT'
+                });
+                if (response.ok) {
+                    newTagInput.value = '';
+                    await loadTags();
+                } else {
+                    console.error('Failed to add tag');
+                }
+            } catch (error) {
+                console.error('Error adding tag:', error);
+            }
+        }
+
         sendBtn.addEventListener('click', sendQuestion);
         questionInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendQuestion();
+        });
+
+        addTagBtn.addEventListener('click', addTag);
+        newTagInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addTag();
         });
 
         loadTags();
