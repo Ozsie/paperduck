@@ -6,9 +6,13 @@ import org.springframework.web.servlet.function.ServerResponse
 import org.springframework.web.servlet.function.paramOrNull
 import org.springframework.web.servlet.function.router
 import se.djupfeldt.paperduck.AiService
+import se.djupfeldt.paperduck.TagService
 
 @Configuration
-class RouterConfiguration(private val aiService: AiService) {
+class RouterConfiguration(
+    private val aiService: AiService,
+    private val tagService: TagService
+) {
 
     @Bean
     fun askRouter() = router {
@@ -16,6 +20,9 @@ class RouterConfiguration(private val aiService: AiService) {
             val question = request.paramOrNull("question") ?: ""
             val tags = (request.paramOrNull("tags") ?: "").split(",").toSet()
             aiService.chat(question, tags).let { ServerResponse.ok().body(it) }
+        }
+        GET("/tags") {
+            ServerResponse.ok().body(tagService.getTags())
         }
     }
 }

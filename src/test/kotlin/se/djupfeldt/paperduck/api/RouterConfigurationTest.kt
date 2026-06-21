@@ -4,23 +4,28 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import se.djupfeldt.paperduck.AiService
 import se.djupfeldt.paperduck.ChatResult
+import se.djupfeldt.paperduck.TagService
 
 class RouterConfigurationTest {
 
     private lateinit var mockMvc: MockMvc
     private lateinit var aiService: AiService
+    private lateinit var tagService: TagService
 
     @BeforeEach
     fun setUp() {
         aiService = mock(AiService::class.java)
-        val routerConfiguration = RouterConfiguration(aiService)
+        tagService = mock(TagService::class.java)
+        val routerConfiguration = RouterConfiguration(aiService, tagService)
         mockMvc = MockMvcBuilders.routerFunctions(routerConfiguration.askRouter()).build()
     }
 
@@ -50,5 +55,17 @@ class RouterConfigurationTest {
         mockMvc.perform(get("/ask"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.answer").value("I don't know"))
+    }
+
+    @Test
+    fun `GET tags should return available tags`() {
+        val tags = listOf("tag1", "tag2")
+        `when`(tagService.getTags()).thenReturn(tags)
+
+        mockMvc.perform(get("/tags"))
+            .andExpect(status().isOk)
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$[0]").value("tag1"))
+            .andExpect(jsonPath("$[1]").value("tag2"))
     }
 }

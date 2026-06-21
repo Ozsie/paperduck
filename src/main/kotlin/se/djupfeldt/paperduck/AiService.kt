@@ -9,15 +9,9 @@ import org.springframework.stereotype.Service
 class AiService(
     private val chatClient: ChatClient,
     private val writingTools: WritingTools,
-    context: ApplicationContext
+    private val tagService: TagService
 ) {
     private val log = LoggerFactory.getLogger(AiService::class.java)
-
-    private val availableTags = try {
-        context.getResource("classpath:tags.md").file.readText().split(",").map { it.trim().lowercase() }.toSet()
-    } catch (_: Exception) {
-        emptySet()
-    }
 
     fun chat(query: String, tags: Set<String>): ChatResult {
         try {
@@ -42,7 +36,7 @@ class AiService(
             You are a helpful assistant for writing novels and short stories.
             Only answer based on data returned by tools.
             Answer in a clear and concise manner. You may make reasonable assumptions.
-            Select appropriate tags from the available tags: ${availableTags.joinToString(", ")}.
+            Select appropriate tags from the available tags: ${tagService.getTags().joinToString(", ")}.
             You may create new tags if more information is needed.$requestedTags
         """.trimIndent()
         return chatClient.prompt()
