@@ -92,4 +92,38 @@ class WritingTools(private val context: ApplicationContext) {
             invocations.add(ToolInvocation("getStoryInformation", tags))
         }
     }
+
+    @Tool(
+        description = """
+        Get mandatory instructions on how to insert links to knowledge files in the response.
+        CALL THIS TOOL BEFORE GENERATING ANY RESPONSE that mentions people, places, or concepts.
+        This tool provides the ONLY allowed format for links and a list of available knowledge files.
+    """
+    )
+    fun getKnowledgeLinkingInstructions(): String {
+        log.info("Getting knowledge linking instructions")
+        val resources = try {
+            context.getResources("classpath:knowledge/*")
+        } catch (_: Exception) {
+            log.error("No knowledge files found")
+            emptyArray()
+        }
+
+        val availableFiles = resources.mapNotNull { it.filename }
+        val filesList = availableFiles.joinToString("\n") { "- $it (Link: /knowledge/${it.removeSuffix(".md")})" }
+
+        return """
+            MANDATORY LINKING RULES:
+            1. When referring to any of the files listed below, you MUST use the provided link format.
+            2. Link format: [Link Text](/knowledge/filename_without_extension)
+            3. DO NOT use other formats like [Text](kb/file.md) or [Text](knowledge/file).
+            
+            Example: For information about Anutu, use [Anutu](/knowledge/anutu).
+            
+            Available knowledge files and their correct links:
+            $filesList
+        """.trimIndent().also {
+            invocations.add(ToolInvocation("getKnowledgeLinkingInstructions", emptyList()))
+        }
+    }
 }

@@ -40,10 +40,15 @@ class AiService(
             You are a helpful assistant for writing novels and short stories.
             Only answer based on data returned by tools.
             Answer in a clear and concise manner. You may make reasonable assumptions.
+            
+            IMPORTANT: You MUST insert links to knowledge files in the response whenever you mention a topic that exists in the knowledge base.
+            To do this correctly, you MUST ALWAYS call 'getKnowledgeLinkingInstructions' to get the current list of available files and the MANDATORY link format.
+            DO NOT guess links or use formats like [Text](kb/file.md).
+            
             Select appropriate tags from the available tags: ${tagService.getTags().joinToString(", ")}.
             You may create new tags if more information is needed.$requestedTags
         """.trimIndent()
-        val chatQuery = if (query.isBlank()) "Vad handlar dessa tags om?" else query
+        val chatQuery = query.ifBlank { "Vad handlar dessa tags om?" }
         return chatClient.prompt()
             .system(
                 systemPrompt

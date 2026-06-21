@@ -1,5 +1,5 @@
 # Anûtu
-Anûtu är ett skepp som skickades iväg av Sfären. Utåt sett angavs underliga signaler från en planet. De faktiska anledningarna var istället tvåfaldiga, dels att försöka avleda en missnöjd befolkning med ett stort projekt, och dels testa en ny typ av motor som i teorin skulle kunna korta ner restider enormt.
+Anûtu är ett skepp som skickades iväg av [Sfären](/knowledge/sfären.md). Utåt sett angavs underliga signaler från en planet. De faktiska anledningarna var istället tvåfaldiga, dels att försöka avleda en missnöjd befolkning med ett stort projekt, och dels testa en ny typ av motor som i teorin skulle kunna korta ner restider enormt.
 ## Besättning
 Ingen ur besättningen är medveten om skeppets egentliga syfte, annat än att de alla förstår att det är lika mycket ett prestigeprojekt för Sfären som det är en vetenskaplig expedition.
 ### Kapten Maria Eriksson

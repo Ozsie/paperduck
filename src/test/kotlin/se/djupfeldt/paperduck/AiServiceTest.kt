@@ -47,8 +47,9 @@ class AiServiceTest {
         `when`(promptSpec.call()).thenReturn(callResponseSpec)
         `when`(callResponseSpec.content()).thenReturn("Anutu is a god.")
 
-        // Simulate a tool call during the AI call
+        // Simulate tool calls during the AI call
         `when`(callResponseSpec.content()).thenAnswer {
+            writingTools.getKnowledgeLinkingInstructions()
             writingTools.getWorldInformation(listOf("anutu"))
             "Anutu is a god."
         }
@@ -56,9 +57,9 @@ class AiServiceTest {
         val result = aiService.chat(query, tags)
 
         assertEquals("Anutu is a god.", result.answer)
-        assertEquals(1, result.toolCalls.size)
-        assertEquals("getWorldInformation", result.toolCalls[0].tool)
-        assertEquals(listOf("anutu"), result.toolCalls[0].tags)
+        assertEquals(2, result.toolCalls.size)
+        assertTrue(result.toolCalls.any { it.tool == "getKnowledgeLinkingInstructions" })
+        assertTrue(result.toolCalls.any { it.tool == "getWorldInformation" })
         assertEquals(listOf("anutu"), result.tagsUsed)
     }
 
@@ -69,7 +70,7 @@ class AiServiceTest {
         val result = aiService.chat("test", emptySet())
 
         assertTrue(result.answer!!.contains("Sorry, I'm having trouble connecting to the AI."))
-        assertTrue(result.answer!!.contains("AI failure"))
+        assertTrue(result.answer.contains("AI failure"))
     }
 
     @Test

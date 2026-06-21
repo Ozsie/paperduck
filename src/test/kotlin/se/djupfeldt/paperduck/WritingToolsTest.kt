@@ -58,4 +58,22 @@ class WritingToolsTest {
 
         assertTrue(result.contains("A story about a duck."))
     }
+
+    @Test
+    fun `getKnowledgeLinkingInstructions should return instructions with available files`() {
+        val resource1 = mock(org.springframework.core.io.Resource::class.java)
+        `when`(resource1.filename).thenReturn("anutu.md")
+        val resource2 = mock(org.springframework.core.io.Resource::class.java)
+        `when`(resource2.filename).thenReturn("sulmu.md")
+
+        `when`(context.getResources("classpath:knowledge/*")).thenReturn(arrayOf(resource1, resource2))
+
+        val result = writingTools.getKnowledgeLinkingInstructions()
+
+        assertTrue(result.contains("/knowledge/anutu"))
+        assertTrue(result.contains("/knowledge/sulmu"))
+        assertTrue(result.contains("anutu.md"))
+        assertTrue(result.contains("sulmu.md"))
+        assertTrue(writingTools.invocations.any { it.tool == "getKnowledgeLinkingInstructions" })
+    }
 }
