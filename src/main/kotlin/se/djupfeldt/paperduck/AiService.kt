@@ -16,12 +16,15 @@ class AiService(
     fun chat(query: String, tags: Set<String>): ChatResult {
         try {
             val call = callAI(query, tags)
+            val toolInvocations = writingTools.invocations.toList()
+            val tagsUsed = toolInvocations.flatMap { it.tags }.distinct()
             return ChatResult(
                 call.content(),
-                writingTools.invocations.toList()
+                toolInvocations,
+                tagsUsed
             ).also {
                 log.info("AI response: ${it.answer}")
-                log.info("Tags used: ${it.toolCalls.flatMap { it.tags }.distinct()}")
+                log.info("Tags used: ${it.tagsUsed}")
                 log.info("Tools used: ${it.toolCalls.map { it.tool }.distinct()}")
             }
         } catch (e: Exception) {
@@ -39,11 +42,12 @@ class AiService(
             Select appropriate tags from the available tags: ${tagService.getTags().joinToString(", ")}.
             You may create new tags if more information is needed.$requestedTags
         """.trimIndent()
+        val chatQuery = if (query.isBlank()) "Vad handlar dessa tags om?" else query
         return chatClient.prompt()
             .system(
                 systemPrompt
             )
-            .user(query)
+            .user(chatQuery)
             .tools(writingTools)
             .call()
     }

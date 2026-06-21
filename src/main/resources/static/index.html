@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paperduck Chat</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 10px; }
+        #history { border: 1px solid #ccc; height: 400px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
+        .message { margin-bottom: 10px; padding: 8px; border-radius: 5px; }
+        .user { background-color: #e3f2fd; align-self: flex-end; }
+        .ai { background-color: #f5f5f5; }
+        #controls { display: flex; flex-direction: column; gap: 10px; }
+        #input-area { display: flex; gap: 10px; }
+        #question { flex-grow: 1; padding: 8px; }
+        #tags-area { display: flex; flex-wrap: wrap; gap: 5px; border: 1px solid #eee; padding: 5px; }
+        .tag-checkbox { display: none; }
+        .tag-label { padding: 4px 8px; border: 1px solid #ccc; border-radius: 15px; cursor: pointer; font-size: 0.9em; }
+        .tag-checkbox:checked + .tag-label { background-color: #2196f3; color: white; border-color: #2196f3; }
+        .loading { font-style: italic; color: #666; }
+        .tool-calls, .tags-used { font-size: 0.8em; color: #777; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Paperduck Chat</h1>
+    
+    <div id="history">
+        <div class="message ai">Welcome! Select tags and ask me anything about your stories.</div>
+    </div>
+
+    <div id="controls">
+        <div id="tags-area">
+            <span>Loading tags...</span>
+        </div>
+        <div id="input-area">
+            <input type="text" id="question" placeholder="Ask a question..." autocomplete="off">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const historyDiv = document.getElementById('history');
+        const tagsArea = document.getElementById('tags-area');
+        const questionInput = document.getElementById('question');
+        const sendBtn = document.getElementById('send-btn');
+
+        // Fetch and display tags
+        async function loadTags() {
+            try {
+                const response = await fetch('/tags');
+                const tags = await response.json();
+                tagsArea.innerHTML = '<strong>Tags:</strong> ';
+                tags.forEach(tag => {
+                    const id = `tag-${tag}`;
+                    const container = document.createElement('span');
+                    container.innerHTML = `
+                        <input type="checkbox" class="tag-checkbox" id="${id}" value="${tag}">
+                        <label class="tag-label" for="${id}">${tag}</label>
+                    `;
+                    tagsArea.appendChild(container);
+                });
+            } catch (error) {
+                console.error('Error loading tags:', error);
+                tagsArea.innerHTML = 'Error loading tags.';
+            }
+        }
+
+        function appendMessage(role, text, toolCalls = [], tagsUsed = []) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${role}`;
+            
+            const content = document.createElement('div');
+            content.textContent = text;
+            msgDiv.appendChild(content);
+
+            if (tagsUsed && tagsUsed.length > 0) {
+                const tagsDiv = document.createElement('div');
+                tagsDiv.className = 'tags-used';
+                tagsDiv.textContent = `Tags used: ${tagsUsed.join(', ')}`;
+                msgDiv.appendChild(tagsDiv);
+            }
+
+            if (toolCalls && toolCalls.length > 0) {
+                const toolsDiv = document.createElement('div');
+                toolsDiv.className = 'tool-calls';
+                const toolsUsed = [...new Set(toolCalls.map(tc => tc.tool))];
+                toolsDiv.textContent = `Tools used: ${toolsUsed.join(', ')}`;
+                msgDiv.appendChild(toolsDiv);
+            }
+
+            historyDiv.appendChild(msgDiv);
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+            return msgDiv;
+        }
+
+        async function sendQuestion() {
+            const question = questionInput.value.trim();
+            const selectedTags = Array.from(document.querySelectorAll('.tag-checkbox:checked'))
+                .map(cb => cb.value);
+
+            if (!question && selectedTags.length === 0) return;
+
+            appendMessage('user', question || '(No question, tags selected)');
+            questionInput.value = '';
+            
+            const loadingMsg = appendMessage('ai', 'Thinking...');
+            loadingMsg.classList.add('loading');
+
+            try {
+                const params = new URLSearchParams({
+                    question: question,
+                    tags: selectedTags.join(',')
+                });
+                const response = await fetch(`/ask?${params.toString()}`);
+                const result = await response.json();
+                
+                loadingMsg.remove();
+                appendMessage('ai', result.answer, result.toolCalls, result.tagsUsed);
+            } catch (error) {
+                console.error('Error:', error);
+                loadingMsg.textContent = 'Error: Could not get a response.';
+                loadingMsg.classList.remove('loading');
+            }
+        }
+
+        sendBtn.addEventListener('click', sendQuestion);
+        questionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendQuestion();
+        });
+
+        loadTags();
+    </script>
+</body>
+</html>

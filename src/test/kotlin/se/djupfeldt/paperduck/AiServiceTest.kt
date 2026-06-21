@@ -15,6 +15,7 @@ class AiServiceTest {
     private lateinit var chatClient: ChatClient
     private lateinit var writingTools: WritingTools
     private lateinit var context: ApplicationContext
+    private lateinit var tagService: TagService
     private lateinit var aiService: AiService
 
     @BeforeEach
@@ -27,7 +28,8 @@ class AiServiceTest {
         `when`(context.getResource("classpath:tags.md")).thenReturn(tagsResource)
 
         writingTools = WritingTools(context)
-        aiService = AiService(chatClient, writingTools, context)
+        tagService = TagService(context)
+        aiService = AiService(chatClient, writingTools, tagService)
     }
 
     @Test
@@ -46,9 +48,10 @@ class AiServiceTest {
         `when`(callResponseSpec.content()).thenReturn("Anutu is a god.")
 
         val result = aiService.chat(query, tags)
-
+        
         assertEquals("Anutu is a god.", result.answer)
-        assertTrue(result.toolCalls.isEmpty()) // No tools actually called in this mock
+        assertTrue(result.toolCalls.isEmpty())
+        assertTrue(result.tagsUsed.isEmpty())
     }
 
     @Test
@@ -59,6 +62,26 @@ class AiServiceTest {
 
         assertTrue(result.answer!!.contains("Sorry, I'm having trouble connecting to the AI."))
         assertTrue(result.answer!!.contains("AI failure"))
+    }
+
+    @Test
+    fun `chat should handle empty query with tags`() {
+        val query = ""
+        val tags = setOf("tag1")
+
+        val promptSpec = mock(ChatClient.ChatClientRequestSpec::class.java)
+        val callResponseSpec = mock(ChatClient.CallResponseSpec::class.java)
+
+        `when`(chatClient.prompt()).thenReturn(promptSpec)
+        `when`(promptSpec.system(anyString())).thenReturn(promptSpec)
+        `when`(promptSpec.user(anyString())).thenReturn(promptSpec)
+        `when`(promptSpec.tools(writingTools)).thenReturn(promptSpec)
+        `when`(promptSpec.call()).thenReturn(callResponseSpec)
+        `when`(callResponseSpec.content()).thenReturn("Here is some info about tag1.")
+
+        val result = aiService.chat(query, tags)
+
+        assertEquals("Here is some info about tag1.", result.answer)
     }
 
     // Add assertTrue if not imported
