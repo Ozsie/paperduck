@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class AiConfig {
     private val log = LoggerFactory.getLogger(AiConfig::class.java)
+
     @Bean
     @ConditionalOnProperty(name = ["paperduck.ai.service"], havingValue = "openai")
     fun openAiChatClient(chatModel: OpenAiChatModel): ChatClient = ChatClient.builder(chatModel)
