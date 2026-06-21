@@ -8,8 +8,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class AiConfig {
     @Bean
-    fun chatClient(builder: ChatClient.Builder): ChatClient =
-        builder
-            .defaultAdvisors(SimpleLoggerAdvisor())
-            .build()
+    fun chatClient(builder: ChatClient.Builder): ChatClient = builder
+        .defaultAdvisors(SimpleLoggerAdvisor())
+        .build()
 }

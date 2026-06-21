@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class PaperduckApplication
 
 fun main(args: Array<String>) {
-	runApplication<PaperduckApplication>(*args)
+    runApplication<PaperduckApplication>(*args)
 }

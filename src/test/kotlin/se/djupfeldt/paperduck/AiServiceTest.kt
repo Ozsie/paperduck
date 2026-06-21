@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.context.ApplicationContext
 import org.springframework.core.io.ByteArrayResource
@@ -21,11 +21,11 @@ class AiServiceTest {
     fun setUp() {
         chatClient = mock(ChatClient::class.java)
         context = mock(ApplicationContext::class.java)
-        
+
         // Mock tags.md resource
         val tagsResource = ByteArrayResource("tag1, tag2".toByteArray())
         `when`(context.getResource("classpath:tags.md")).thenReturn(tagsResource)
-        
+
         writingTools = WritingTools(context)
         aiService = AiService(chatClient, writingTools, context)
     }
@@ -34,10 +34,10 @@ class AiServiceTest {
     fun `chat should return successful result`() {
         val query = "What is Anutu?"
         val tags = setOf("anutu")
-        
+
         val promptSpec = mock(ChatClient.ChatClientRequestSpec::class.java)
         val callResponseSpec = mock(ChatClient.CallResponseSpec::class.java)
-        
+
         `when`(chatClient.prompt()).thenReturn(promptSpec)
         `when`(promptSpec.system(anyString())).thenReturn(promptSpec)
         `when`(promptSpec.user(anyString())).thenReturn(promptSpec)
@@ -60,7 +60,7 @@ class AiServiceTest {
         assertTrue(result.answer!!.contains("Sorry, I'm having trouble connecting to the AI."))
         assertTrue(result.answer!!.contains("AI failure"))
     }
-    
+
     // Add assertTrue if not imported
     private fun assertTrue(condition: Boolean) {
         org.junit.jupiter.api.Assertions.assertTrue(condition)

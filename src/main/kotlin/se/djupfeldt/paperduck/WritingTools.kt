@@ -52,7 +52,6 @@ class WritingTools(private val context: ApplicationContext) {
         }
     }
 
-
     @Tool(
         description = """
         Look up information from stories in the world.

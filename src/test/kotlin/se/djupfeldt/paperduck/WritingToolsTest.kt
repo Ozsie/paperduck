@@ -3,11 +3,10 @@ package se.djupfeldt.paperduck
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.springframework.context.ApplicationContext
 import org.springframework.core.io.ByteArrayResource
-import org.springframework.core.io.Resource
 
 class WritingToolsTest {
 
@@ -24,12 +23,12 @@ class WritingToolsTest {
     fun `getWorldInformation should return content when tags match`() {
         val resource1 = ByteArrayResource("This is about Anutu.".toByteArray())
         val resource2 = ByteArrayResource("This is about something else.".toByteArray())
-        
+
         // Mocking getResources to return our test resources
         // Note: WritingTools uses resource.filename which ByteArrayResource provides as null by default
         // We might need a better mock or a custom Resource implementation if filename is critical
         // But WritingTools only uses filename for logging.
-        
+
         `when`(context.getResources("classpath:knowledge/*")).thenReturn(arrayOf(resource1, resource2))
 
         val result = writingTools.getWorldInformation(listOf("Anutu"))

@@ -2,8 +2,8 @@ package se.djupfeldt.paperduck.api
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -32,9 +32,11 @@ class RouterConfigurationTest {
 
         `when`(aiService.chat(question, tags)).thenReturn(chatResult)
 
-        mockMvc.perform(get("/ask")
-            .param("question", question)
-            .param("tags", "life"))
+        mockMvc.perform(
+            get("/ask")
+                .param("question", question)
+                .param("tags", "life")
+        )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.answer").value("42"))
     }
