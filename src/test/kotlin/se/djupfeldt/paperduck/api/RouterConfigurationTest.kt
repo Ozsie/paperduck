@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import se.djupfeldt.paperduck.AiService
 import se.djupfeldt.paperduck.ChatResult
+import se.djupfeldt.paperduck.KnowledgeService
 import se.djupfeldt.paperduck.TagService
 
 class RouterConfigurationTest {
@@ -20,12 +21,14 @@ class RouterConfigurationTest {
     private lateinit var mockMvc: MockMvc
     private lateinit var aiService: AiService
     private lateinit var tagService: TagService
+    private lateinit var knowledgeService: KnowledgeService
 
     @BeforeEach
     fun setUp() {
         aiService = mock(AiService::class.java)
         tagService = mock(TagService::class.java)
-        val routerConfiguration = RouterConfiguration(aiService, tagService)
+        knowledgeService = mock(KnowledgeService::class.java)
+        val routerConfiguration = RouterConfiguration(aiService, tagService, knowledgeService)
         mockMvc = MockMvcBuilders.routerFunctions(routerConfiguration.askRouter()).build()
     }
 
@@ -67,5 +70,26 @@ class RouterConfigurationTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$[0]").value("tag1"))
             .andExpect(jsonPath("$[1]").value("tag2"))
+    }
+
+    @Test
+    fun `GET knowledge should return rendered markdown`() {
+        val document = "test-doc"
+        val renderedContent = "<h1>Test</h1>"
+        `when`(knowledgeService.getKnowledge(document)).thenReturn(renderedContent)
+
+        mockMvc.perform(get("/knowledge/$document"))
+            .andExpect(status().isOk)
+            .andExpect(content().contentType("text/html;charset=UTF-8"))
+            .andExpect(content().string(renderedContent))
+    }
+
+    @Test
+    fun `GET knowledge should return 404 if not found`() {
+        val document = "non-existent"
+        `when`(knowledgeService.getKnowledge(document)).thenReturn(null)
+
+        mockMvc.perform(get("/knowledge/$document"))
+            .andExpect(status().isNotFound)
     }
 }

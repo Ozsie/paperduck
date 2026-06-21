@@ -44,6 +44,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.springframework.ai:spring-ai-starter-model-openai")
+	implementation("com.vladsch.flexmark:flexmark-all:0.64.0")
 	implementation("org.springframework.ai:spring-ai-starter-model-mistral-ai")
 	implementation("tools.jackson.module:jackson-module-kotlin")
 
