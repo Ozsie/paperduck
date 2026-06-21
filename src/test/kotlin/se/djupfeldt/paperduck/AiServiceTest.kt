@@ -48,7 +48,7 @@ class AiServiceTest {
         `when`(callResponseSpec.content()).thenReturn("Anutu is a god.")
 
         val result = aiService.chat(query, tags)
-        
+
         assertEquals("Anutu is a god.", result.answer)
         assertTrue(result.toolCalls.isEmpty())
         assertTrue(result.tagsUsed.isEmpty())

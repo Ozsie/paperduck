@@ -2,7 +2,6 @@ package se.djupfeldt.paperduck
 
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
-import org.springframework.context.ApplicationContext
 import org.springframework.stereotype.Service
 
 @Service
