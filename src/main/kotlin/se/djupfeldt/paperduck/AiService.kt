@@ -14,11 +14,13 @@ class AiService(
 
     fun chat(query: String, tags: Set<String>): ChatResult {
         try {
+            writingTools.invocations.clear()
             val call = callAI(query, tags)
+            val answer = call.content()
             val toolInvocations = writingTools.invocations.toList()
             val tagsUsed = toolInvocations.flatMap { it.tags }.distinct()
             return ChatResult(
-                call.content(),
+                answer,
                 toolInvocations,
                 tagsUsed
             ).also {

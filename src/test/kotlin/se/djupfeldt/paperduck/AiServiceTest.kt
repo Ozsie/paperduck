@@ -47,11 +47,19 @@ class AiServiceTest {
         `when`(promptSpec.call()).thenReturn(callResponseSpec)
         `when`(callResponseSpec.content()).thenReturn("Anutu is a god.")
 
+        // Simulate a tool call during the AI call
+        `when`(callResponseSpec.content()).thenAnswer {
+            writingTools.getWorldInformation(listOf("anutu"))
+            "Anutu is a god."
+        }
+
         val result = aiService.chat(query, tags)
 
         assertEquals("Anutu is a god.", result.answer)
-        assertTrue(result.toolCalls.isEmpty())
-        assertTrue(result.tagsUsed.isEmpty())
+        assertEquals(1, result.toolCalls.size)
+        assertEquals("getWorldInformation", result.toolCalls[0].tool)
+        assertEquals(listOf("anutu"), result.toolCalls[0].tags)
+        assertEquals(listOf("anutu"), result.tagsUsed)
     }
 
     @Test
