@@ -7,6 +7,7 @@ import org.springframework.web.servlet.function.ServerResponse
 import org.springframework.web.servlet.function.paramOrNull
 import org.springframework.web.servlet.function.router
 import se.djupfeldt.paperduck.AiService
+import se.djupfeldt.paperduck.ChatMessage
 import se.djupfeldt.paperduck.KnowledgeService
 import se.djupfeldt.paperduck.TagService
 
@@ -19,10 +20,12 @@ class RouterConfiguration(
 
     @Bean
     fun askRouter() = router {
-        GET("/ask") { request ->
-            val question = request.paramOrNull("question") ?: ""
-            val tags = (request.paramOrNull("tags") ?: "").split(",").toSet()
-            aiService.chat(question, tags).let { ServerResponse.ok().body(it) }
+        POST("/ask") { request ->
+            val body = request.body(AskRequest::class.java)
+            val question = body.question ?: ""
+            val tags = body.tags?.toSet() ?: emptySet()
+            val history = body.history ?: emptyList()
+            aiService.chat(question, tags, history).let { ServerResponse.ok().body(it) }
         }
         GET("/tags") {
             ServerResponse.ok().body(tagService.getTags())
@@ -45,3 +48,9 @@ class RouterConfiguration(
         }
     }
 }
+
+data class AskRequest(
+    val question: String?,
+    val tags: List<String>?,
+    val history: List<ChatMessage>?
+)

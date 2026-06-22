@@ -7,6 +7,7 @@ import org.mockito.Mockito.`when`
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -33,29 +34,33 @@ class RouterConfigurationTest {
     }
 
     @Test
-    fun `GET ask should return chat result`() {
+    fun `POST ask should return chat result`() {
         val question = "What is the meaning of life?"
         val tags = setOf("life")
         val chatResult = ChatResult("42", emptyList())
 
-        `when`(aiService.chat(question, tags)).thenReturn(chatResult)
+        `when`(aiService.chat(question, tags, emptyList())).thenReturn(chatResult)
 
         mockMvc.perform(
-            get("/ask")
-                .param("question", question)
-                .param("tags", "life")
+            post("/ask")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"question": "$question", "tags": ["life"], "history": []}""")
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.answer").value("42"))
     }
 
     @Test
-    fun `GET ask should handle empty parameters`() {
+    fun `POST ask should handle empty body`() {
         val chatResult = ChatResult("I don't know", emptyList())
 
-        `when`(aiService.chat("", setOf(""))).thenReturn(chatResult)
+        `when`(aiService.chat("", emptySet(), emptyList())).thenReturn(chatResult)
 
-        mockMvc.perform(get("/ask"))
+        mockMvc.perform(
+            post("/ask")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}")
+        )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.answer").value("I don't know"))
     }

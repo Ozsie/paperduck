@@ -3,10 +3,12 @@ package se.djupfeldt.paperduck
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.springframework.ai.chat.client.ChatClient
+import org.springframework.ai.chat.messages.Message
 import org.springframework.context.ApplicationContext
 import org.springframework.core.io.ByteArrayResource
 
@@ -43,6 +45,7 @@ class AiServiceTest {
         `when`(chatClient.prompt()).thenReturn(promptSpec)
         `when`(promptSpec.system(anyString())).thenReturn(promptSpec)
         `when`(promptSpec.user(anyString())).thenReturn(promptSpec)
+        `when`(promptSpec.messages(any<Message>())).thenReturn(promptSpec)
         `when`(promptSpec.tools(writingTools)).thenReturn(promptSpec)
         `when`(promptSpec.call()).thenReturn(callResponseSpec)
         `when`(callResponseSpec.content()).thenReturn("Anutu is a god.")
@@ -84,6 +87,7 @@ class AiServiceTest {
         `when`(chatClient.prompt()).thenReturn(promptSpec)
         `when`(promptSpec.system(anyString())).thenReturn(promptSpec)
         `when`(promptSpec.user(anyString())).thenReturn(promptSpec)
+        `when`(promptSpec.messages(any<Message>())).thenReturn(promptSpec)
         `when`(promptSpec.tools(writingTools)).thenReturn(promptSpec)
         `when`(promptSpec.call()).thenReturn(callResponseSpec)
         `when`(callResponseSpec.content()).thenReturn("Here is some info about tag1.")
@@ -93,7 +97,29 @@ class AiServiceTest {
         assertEquals("Here is some info about tag1.", result.answer)
     }
 
-    // Add assertTrue if not imported
+    @Test
+    fun `chat should include history in prompt`() {
+        val query = "What was my last question?"
+        val history = listOf(ChatMessage("user", "Who is Anutu?"), ChatMessage("assistant", "Anutu is a god."))
+        
+        val promptSpec = mock(ChatClient.ChatClientRequestSpec::class.java)
+        val callResponseSpec = mock(ChatClient.CallResponseSpec::class.java)
+
+        `when`(chatClient.prompt()).thenReturn(promptSpec)
+        `when`(promptSpec.system(anyString())).thenReturn(promptSpec)
+        `when`(promptSpec.user(anyString())).thenReturn(promptSpec)
+        `when`(promptSpec.messages(any<Message>())).thenReturn(promptSpec)
+        `when`(promptSpec.tools(writingTools)).thenReturn(promptSpec)
+        `when`(promptSpec.call()).thenReturn(callResponseSpec)
+        `when`(callResponseSpec.content()).thenReturn("Your last question was about Anutu.")
+
+        val result = aiService.chat(query, emptySet(), history)
+
+        assertEquals("Your last question was about Anutu.", result.answer)
+        
+        // Verify that messages were called at least twice (for the history)
+        org.mockito.Mockito.verify(promptSpec, org.mockito.Mockito.atLeast(2)).messages(any<Message>())
+    }
     private fun assertTrue(condition: Boolean) {
         org.junit.jupiter.api.Assertions.assertTrue(condition)
     }

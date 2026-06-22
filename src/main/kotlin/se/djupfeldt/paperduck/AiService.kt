@@ -12,10 +12,10 @@ class AiService(
 ) {
     private val log = LoggerFactory.getLogger(AiService::class.java)
 
-    fun chat(query: String, tags: Set<String>): ChatResult {
+    fun chat(query: String, tags: Set<String>, history: List<ChatMessage> = emptyList()): ChatResult {
         try {
             writingTools.invocations.clear()
-            val call = callAI(query, tags)
+            val call = callAI(query, tags, history)
             val answer = call.content()
             val toolInvocations = writingTools.invocations.toList()
             val tagsUsed = toolInvocations.flatMap { it.tags }.distinct()
@@ -34,7 +34,7 @@ class AiService(
         }
     }
 
-    fun callAI(query: String, tags: Set<String>): ChatClient.CallResponseSpec {
+    fun callAI(query: String, tags: Set<String>, history: List<ChatMessage> = emptyList()): ChatClient.CallResponseSpec {
         val requestedTags = if (tags.isNotEmpty()) "\nRequested tags are: ${tags.joinToString(", ")}." else ""
         val systemPrompt = """
             You are a helpful assistant for writing novels and short stories.
@@ -49,10 +49,17 @@ class AiService(
             You may create new tags if more information is needed.$requestedTags
         """.trimIndent()
         val chatQuery = query.ifBlank { "Vad handlar dessa tags om?" }
-        return chatClient.prompt()
-            .system(
-                systemPrompt
-            )
+        val prompt = chatClient.prompt()
+            .system(systemPrompt)
+
+        history.forEach { msg ->
+            when (msg.role.lowercase()) {
+                "user" -> prompt.messages(org.springframework.ai.chat.messages.UserMessage(msg.content))
+                "assistant", "ai" -> prompt.messages(org.springframework.ai.chat.messages.AssistantMessage(msg.content))
+            }
+        }
+
+        return prompt
             .user(chatQuery)
             .tools(writingTools)
             .call()

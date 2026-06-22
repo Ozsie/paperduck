@@ -184,6 +184,22 @@
         #add-tag-btn:hover { 
             background-color: var(--cream);
         }
+
+        #options-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            color: var(--coffee-dark);
+        }
+
+        #options-area input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        #options-area label {
+            cursor: pointer;
+        }
         
         .loading { font-style: italic; color: var(--coffee-light); text-align: center; padding: 10px; }
         .tool-calls, .tags-used { font-size: 0.75em; color: var(--coffee-light); margin-top: 6px; font-style: italic; }
@@ -269,6 +285,10 @@
             <input type="text" id="new-tag" placeholder="New tag..." autocomplete="off">
             <button id="add-tag-btn">Add Tag</button>
         </div>
+        <div id="options-area">
+            <input type="checkbox" id="include-history" checked>
+            <label for="include-history">Include chat history</label>
+        </div>
         <div id="input-area">
             <input type="text" id="question" placeholder="Ask a question..." autocomplete="off">
             <button id="send-btn">Send</button>
@@ -294,12 +314,14 @@
         const sendBtn = document.getElementById('send-btn');
         const newTagInput = document.getElementById('new-tag');
         const addTagBtn = document.getElementById('add-tag-btn');
+        const includeHistoryCheckbox = document.getElementById('include-history');
         const popupOverlay = document.getElementById('popup-overlay');
         const popupBody = document.getElementById('popup-body');
         const popupClose = document.getElementById('popup-close');
 
         let allTags = [];
         let selectedTags = new Set();
+        let chatHistory = [];
 
         // Fetch and display tags
         async function loadTags() {
@@ -389,6 +411,8 @@
         };
 
         function appendMessage(role, text, toolCalls = [], tagsUsed = []) {
+            chatHistory.push({ role: role === 'ai' ? 'assistant' : 'user', content: text });
+
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${role}`;
             
@@ -426,14 +450,22 @@
             questionInput.value = '';
             
             const loadingMsg = appendMessage('ai', 'Thinking...');
+            // We don't want "Thinking..." in the history
+            chatHistory.pop();
             loadingMsg.classList.add('loading');
 
             try {
-                const params = new URLSearchParams({
-                    question: question,
-                    tags: tagsArray.join(',')
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        tags: tagsArray,
+                        history: includeHistoryCheckbox.checked ? chatHistory : []
+                    })
                 });
-                const response = await fetch(`/ask?${params.toString()}`);
                 const result = await response.json();
                 
                 loadingMsg.remove();
