@@ -12,9 +12,10 @@ class AiService(
 ) {
     private val log = LoggerFactory.getLogger(AiService::class.java)
 
-    fun chat(query: String, tags: Set<String>, history: List<ChatMessage> = emptyList()): ChatResult {
+    fun chat(query: String, tags: Set<String>, history: List<ChatMessage> = emptyList(), repoId: String? = null): ChatResult {
         try {
             writingTools.invocations.clear()
+            writingTools.currentRepoId = repoId
             val call = callAI(query, tags, history)
             val answer = call.content()
             val toolInvocations = writingTools.invocations.toList()
@@ -44,6 +45,8 @@ class AiService(
             IMPORTANT: You MUST insert links to knowledge files in the response whenever you mention a topic that exists in the knowledge base.
             To do this correctly, you MUST ALWAYS call 'getKnowledgeLinkingInstructions' to get the current list of available files and the MANDATORY link format.
             DO NOT guess links or use formats like [Text](kb/file.md).
+            
+            DO NOT include any citations or references in the format [1], [2], etc., or use any built-in citation features.
             
             Select appropriate tags from the available tags: ${tagService.getTags().joinToString(", ")}.
             You may create new tags if more information is needed.$requestedTags

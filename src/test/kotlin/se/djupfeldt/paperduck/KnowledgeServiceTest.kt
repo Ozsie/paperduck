@@ -7,18 +7,16 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import org.springframework.core.io.Resource
-import org.springframework.core.io.ResourceLoader
 
 class KnowledgeServiceTest {
 
-    private lateinit var resourceLoader: ResourceLoader
+    private lateinit var gitHubService: GitHubService
     private lateinit var knowledgeService: KnowledgeService
 
     @BeforeEach
     fun setUp() {
-        resourceLoader = mock(ResourceLoader::class.java)
-        knowledgeService = KnowledgeService(resourceLoader)
+        gitHubService = mock(GitHubService::class.java)
+        knowledgeService = KnowledgeService(gitHubService)
     }
 
     @Test
@@ -27,14 +25,7 @@ class KnowledgeServiceTest {
         val markdown = "# Title\n\nContent"
         val expectedHtml = "<h1>Title</h1>\n<p>Content</p>\n"
 
-        val resource = mock(Resource::class.java)
-        val tempFile = File.createTempFile("knowledge", ".md")
-        tempFile.writeText(markdown)
-        tempFile.deleteOnExit()
-
-        `when`(resourceLoader.getResource("classpath:knowledge/$document.md")).thenReturn(resource)
-        `when`(resource.exists()).thenReturn(true)
-        `when`(resource.file).thenReturn(tempFile)
+        `when`(gitHubService.getFileContent("knowledge", "$document.md", null)).thenReturn(markdown)
 
         val result = knowledgeService.getKnowledge(document)
         assertEquals(expectedHtml, result)
@@ -43,10 +34,8 @@ class KnowledgeServiceTest {
     @Test
     fun `getKnowledge should return null if resource does not exist`() {
         val document = "nonexistent"
-        val resource = mock(Resource::class.java)
 
-        `when`(resourceLoader.getResource("classpath:knowledge/$document.md")).thenReturn(resource)
-        `when`(resource.exists()).thenReturn(false)
+        `when`(gitHubService.getFileContent("knowledge", "$document.md", null)).thenReturn(null)
 
         val result = knowledgeService.getKnowledge(document)
         assertNull(result)
@@ -58,14 +47,7 @@ class KnowledgeServiceTest {
         val markdown = "# Anûtu\n\nAnûtu är ett skepp."
         val expectedHtml = "<h1>Anûtu</h1>\n<p>Anûtu är ett skepp.</p>\n"
 
-        val resource = mock(Resource::class.java)
-        val tempFile = File.createTempFile("knowledge", ".md")
-        tempFile.writeText(markdown, Charsets.UTF_8)
-        tempFile.deleteOnExit()
-
-        `when`(resourceLoader.getResource("classpath:knowledge/$document.md")).thenReturn(resource)
-        `when`(resource.exists()).thenReturn(true)
-        `when`(resource.file).thenReturn(tempFile)
+        `when`(gitHubService.getFileContent("knowledge", "$document.md", null)).thenReturn(markdown)
 
         val result = knowledgeService.getKnowledge(document)
         assertEquals(expectedHtml, result)

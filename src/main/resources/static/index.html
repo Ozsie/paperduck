@@ -137,17 +137,29 @@
         #tags-area { position: relative; display: inline-block; width: 100%; }
         
         #tags-dropdown-btn { 
-            padding: 10px; border: 1px solid var(--border-soft); border-radius: 6px; cursor: pointer; 
-            background: white; display: flex; gap: 5px; min-height: 24px; align-items: center;
+            font-family: 'Karla', sans-serif;
+            padding: 10px 12px; border: 1px solid var(--border-soft); border-radius: 6px; cursor: pointer; 
+            background-color: white; display: flex; gap: 5px; min-height: 24px; align-items: center;
+            transition: border-color 0.2s;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a67b5b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 14px;
+            padding-right: 40px;
+            box-sizing: border-box;
+        }
+        
+        #tags-dropdown-btn:hover {
+            border-color: var(--coffee-light);
         }
         
         #selected-tags-container {
             display: flex; flex-wrap: wrap; gap: 8px; flex-grow: 1;
             font-size: 0.9em;
             color: #888;
+            line-height: 1.2;
         }
         
-        #tags-dropdown-btn:after { content: '▼'; margin-left: auto; font-size: 0.8em; color: var(--coffee-light); }
         
         #tags-menu { 
             display: none; position: absolute; bottom: 100%; left: 0; right: 0; margin-bottom: 5px;
@@ -173,12 +185,41 @@
         .selected-tag-badge .remove-tag:hover { opacity: 1; }
         
         #add-tag-area { display: flex; gap: 10px; }
+        #repo-area { display: flex; align-items: center; gap: 12px; }
+        #repo-area label {
+            font-size: 0.9em;
+            color: var(--coffee-dark);
+            font-weight: 600;
+        }
+        #repo-select {
+            font-family: 'Karla', sans-serif;
+            padding: 10px 12px;
+            border: 1px solid var(--border-soft);
+            border-radius: 6px;
+            background-color: white;
+            outline: none;
+            flex-grow: 1;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a67b5b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 14px;
+            padding-right: 40px;
+            box-sizing: border-box;
+            height: 42px;
+        }
+        #repo-select:focus {
+            border-color: var(--coffee-light);
+        }
         #new-tag { flex-grow: 1; }
         
         #add-tag-btn { 
             background-color: transparent; 
             color: var(--coffee-medium); 
             border: 1px solid var(--coffee-medium); 
+            padding: 10px 20px;
         }
         
         #add-tag-btn:hover { 
@@ -291,6 +332,12 @@
     </div>
 
     <div id="controls">
+        <div id="repo-area">
+            <label for="repo-select">World:</label>
+            <select id="repo-select">
+                <!-- Repositories will be loaded here -->
+            </select>
+        </div>
         <div id="tags-area">
             <div id="tags-dropdown-btn">
                 <span id="selected-tags-container">Select tags...</span>
@@ -337,6 +384,7 @@
         const sendBtn = document.getElementById('send-btn');
         const newTagInput = document.getElementById('new-tag');
         const addTagBtn = document.getElementById('add-tag-btn');
+        const repoSelect = document.getElementById('repo-select');
         const includeHistoryCheckbox = document.getElementById('include-history');
         const popupOverlay = document.getElementById('popup-overlay');
         const popupBody = document.getElementById('popup-body');
@@ -345,6 +393,28 @@
         let allTags = [];
         let selectedTags = new Set();
         let chatHistory = [];
+        let repositories = [];
+
+        // Fetch and display repositories
+        async function loadRepositories() {
+            try {
+                const response = await fetch('/repositories');
+                repositories = await response.json();
+                renderRepositories();
+            } catch (error) {
+                console.error('Error loading repositories:', error);
+            }
+        }
+
+        function renderRepositories() {
+            repoSelect.innerHTML = '';
+            repositories.forEach(repo => {
+                const option = document.createElement('option');
+                option.value = repo.id;
+                option.textContent = repo.name;
+                repoSelect.appendChild(option);
+            });
+        }
 
         // Fetch and display tags
         async function loadTags() {
@@ -486,7 +556,8 @@
                     body: JSON.stringify({
                         question: question,
                         tags: tagsArray,
-                        history: includeHistoryCheckbox.checked ? chatHistory : []
+                        history: includeHistoryCheckbox.checked ? chatHistory : [],
+                        repoId: repoSelect.value
                     })
                 });
                 const result = await response.json();
@@ -522,7 +593,9 @@
         // Popup logic
         async function showKnowledgePopup(url) {
             try {
-                const response = await fetch(url);
+                const repoId = repoSelect.value;
+                const finalUrl = url.includes('?') ? `${url}&repoId=${repoId}` : `${url}?repoId=${repoId}`;
+                const response = await fetch(finalUrl);
                 if (response.ok) {
                     const html = await response.text();
                     popupBody.innerHTML = html;
@@ -575,6 +648,7 @@
         });
 
         loadTags();
+        loadRepositories();
     </script>
 </body>
 </html>

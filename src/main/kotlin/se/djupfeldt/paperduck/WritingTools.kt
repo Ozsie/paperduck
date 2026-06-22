@@ -2,12 +2,13 @@ package se.djupfeldt.paperduck
 
 import org.slf4j.LoggerFactory
 import org.springframework.ai.tool.annotation.Tool
-import org.springframework.context.ApplicationContext
 import org.springframework.stereotype.Component
 
 @Component
-class WritingTools(private val context: ApplicationContext) {
+class WritingTools(private val gitHubService: GitHubService) {
     private val log = LoggerFactory.getLogger(WritingTools::class.java)
+
+    var currentRepoId: String? = null
 
     val invocations = mutableListOf<ToolInvocation>()
 
@@ -20,23 +21,14 @@ class WritingTools(private val context: ApplicationContext) {
     fun getWorldInformation(
         tags: List<String>
     ): String {
-        log.info("Getting information about the world. Tags: ${tags.joinToString(", ")}")
-        val resources = try {
-            context.getResources("classpath:knowledge/*")
-        } catch (_: Exception) {
-            log.error("No knowledge files found")
-            emptyArray()
-        }
-        log.info("Available resources: ${resources.joinToString(", ") { it.filename ?: "null" }}")
+        log.info("Getting information about the world. Tags: ${tags.joinToString(", ")}, Repo: $currentRepoId")
+        val fileNames = gitHubService.listFiles("knowledge", currentRepoId)
+        log.info("Available knowledge files: ${fileNames.joinToString(", ")}")
 
-        val matchingContent = resources.mapNotNull { resource ->
-            val content = try {
-                resource.inputStream.bufferedReader().use { it.readText() }
-            } catch (_: Exception) {
-                null
-            }
+        val matchingContent = fileNames.mapNotNull { fileName ->
+            val content = gitHubService.getFileContent("knowledge", fileName, currentRepoId)
             if (content != null && tags.any { tag -> content.contains(tag, ignoreCase = true) }) {
-                log.info("Found matching content in: ${resource.filename}")
+                log.info("Found matching content in: $fileName")
                 content
             } else {
                 null
@@ -61,23 +53,14 @@ class WritingTools(private val context: ApplicationContext) {
     fun getStoryInformation(
         tags: List<String>
     ): String {
-        log.info("Getting information about stories. Tags: ${tags.joinToString(", ")}")
-        val resources = try {
-            context.getResources("classpath:stories/*")
-        } catch (_: Exception) {
-            log.error("No story files found")
-            emptyArray()
-        }
-        log.info("Available resources: ${resources.joinToString(", ") { it.filename ?: "null" }}")
+        log.info("Getting information about stories. Tags: ${tags.joinToString(", ")}, Repo: $currentRepoId")
+        val fileNames = gitHubService.listFiles("stories", currentRepoId)
+        log.info("Available story files: ${fileNames.joinToString(", ")}")
 
-        val matchingContent = resources.mapNotNull { resource ->
-            val content = try {
-                resource.inputStream.bufferedReader().use { it.readText() }
-            } catch (_: Exception) {
-                null
-            }
+        val matchingContent = fileNames.mapNotNull { fileName ->
+            val content = gitHubService.getFileContent("stories", fileName, currentRepoId)
             if (content != null && tags.any { tag -> content.contains(tag, ignoreCase = true) }) {
-                log.info("Found matching content in: ${resource.filename}")
+                log.info("Found matching content in: $fileName")
                 content
             } else {
                 null
@@ -101,16 +84,10 @@ class WritingTools(private val context: ApplicationContext) {
     """
     )
     fun getKnowledgeLinkingInstructions(): String {
-        log.info("Getting knowledge linking instructions")
-        val resources = try {
-            context.getResources("classpath:knowledge/*")
-        } catch (_: Exception) {
-            log.error("No knowledge files found")
-            emptyArray()
-        }
+        log.info("Getting knowledge linking instructions. Repo: $currentRepoId")
+        val fileNames = gitHubService.listFiles("knowledge", currentRepoId)
 
-        val availableFiles = resources.mapNotNull { it.filename }
-        val filesList = availableFiles.joinToString("\n") { "- $it (Link: /knowledge/${it.removeSuffix(".md")})" }
+        val filesList = fileNames.joinToString("\n") { "- $it (Link: /knowledge/${it.removeSuffix(".md")})" }
 
         return """
             MANDATORY LINKING RULES:
@@ -121,7 +98,7 @@ class WritingTools(private val context: ApplicationContext) {
             Example: For information about Anutu, use [Anutu](/knowledge/anutu).
             
             Available knowledge files and their correct links:
-            $filesList
+            ${filesList.ifEmpty { "No knowledge files available." }}
         """.trimIndent().also {
             invocations.add(ToolInvocation("getKnowledgeLinkingInstructions", emptyList()))
         }

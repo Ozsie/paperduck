@@ -10,26 +10,20 @@ import org.springframework.core.io.ByteArrayResource
 
 class WritingToolsTest {
 
-    private lateinit var context: ApplicationContext
+    private lateinit var gitHubService: GitHubService
     private lateinit var writingTools: WritingTools
 
     @BeforeEach
     fun setUp() {
-        context = mock(ApplicationContext::class.java)
-        writingTools = WritingTools(context)
+        gitHubService = mock(GitHubService::class.java)
+        writingTools = WritingTools(gitHubService)
     }
 
     @Test
     fun `getWorldInformation should return content when tags match`() {
-        val resource1 = ByteArrayResource("This is about Anutu.".toByteArray())
-        val resource2 = ByteArrayResource("This is about something else.".toByteArray())
-
-        // Mocking getResources to return our test resources
-        // Note: WritingTools uses resource.filename which ByteArrayResource provides as null by default
-        // We might need a better mock or a custom Resource implementation if filename is critical
-        // But WritingTools only uses filename for logging.
-
-        `when`(context.getResources("classpath:knowledge/*")).thenReturn(arrayOf(resource1, resource2))
+        `when`(gitHubService.listFiles("knowledge", null)).thenReturn(listOf("anutu.md", "other.md"))
+        `when`(gitHubService.getFileContent("knowledge", "anutu.md", null)).thenReturn("This is about Anutu.")
+        `when`(gitHubService.getFileContent("knowledge", "other.md", null)).thenReturn("This is about something else.")
 
         val result = writingTools.getWorldInformation(listOf("Anutu"))
 
@@ -41,8 +35,8 @@ class WritingToolsTest {
 
     @Test
     fun `getWorldInformation should return no information message when no tags match`() {
-        val resource1 = ByteArrayResource("This is about Anutu.".toByteArray())
-        `when`(context.getResources("classpath:knowledge/*")).thenReturn(arrayOf(resource1))
+        `when`(gitHubService.listFiles("knowledge", null)).thenReturn(listOf("anutu.md"))
+        `when`(gitHubService.getFileContent("knowledge", "anutu.md", null)).thenReturn("This is about Anutu.")
 
         val result = writingTools.getWorldInformation(listOf("Unknown"))
 
@@ -51,8 +45,8 @@ class WritingToolsTest {
 
     @Test
     fun `getStoryInformation should return content when tags match`() {
-        val resource1 = ByteArrayResource("A story about a duck.".toByteArray())
-        `when`(context.getResources("classpath:stories/*")).thenReturn(arrayOf(resource1))
+        `when`(gitHubService.listFiles("stories", null)).thenReturn(listOf("story1.md"))
+        `when`(gitHubService.getFileContent("stories", "story1.md", null)).thenReturn("A story about a duck.")
 
         val result = writingTools.getStoryInformation(listOf("duck"))
 
@@ -61,12 +55,7 @@ class WritingToolsTest {
 
     @Test
     fun `getKnowledgeLinkingInstructions should return instructions with available files`() {
-        val resource1 = mock(org.springframework.core.io.Resource::class.java)
-        `when`(resource1.filename).thenReturn("anutu.md")
-        val resource2 = mock(org.springframework.core.io.Resource::class.java)
-        `when`(resource2.filename).thenReturn("sulmu.md")
-
-        `when`(context.getResources("classpath:knowledge/*")).thenReturn(arrayOf(resource1, resource2))
+        `when`(gitHubService.listFiles("knowledge", null)).thenReturn(listOf("anutu.md", "sulmu.md"))
 
         val result = writingTools.getKnowledgeLinkingInstructions()
 

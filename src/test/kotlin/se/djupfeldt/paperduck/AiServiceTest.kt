@@ -16,6 +16,7 @@ class AiServiceTest {
 
     private lateinit var chatClient: ChatClient
     private lateinit var writingTools: WritingTools
+    private lateinit var gitHubService: GitHubService
     private lateinit var context: ApplicationContext
     private lateinit var tagService: TagService
     private lateinit var aiService: AiService
@@ -23,13 +24,14 @@ class AiServiceTest {
     @BeforeEach
     fun setUp() {
         chatClient = mock(ChatClient::class.java)
+        gitHubService = mock(GitHubService::class.java)
         context = mock(ApplicationContext::class.java)
 
         // Mock tags.md resource
         val tagsResource = ByteArrayResource("tag1, tag2".toByteArray())
         `when`(context.getResource("classpath:tags.md")).thenReturn(tagsResource)
 
-        writingTools = WritingTools(context)
+        writingTools = WritingTools(gitHubService)
         tagService = TagService(context)
         aiService = AiService(chatClient, writingTools, tagService)
     }
@@ -52,12 +54,13 @@ class AiServiceTest {
 
         // Simulate tool calls during the AI call
         `when`(callResponseSpec.content()).thenAnswer {
+            assertEquals("anutu-repo", writingTools.currentRepoId)
             writingTools.getKnowledgeLinkingInstructions()
             writingTools.getWorldInformation(listOf("anutu"))
             "Anutu is a god."
         }
 
-        val result = aiService.chat(query, tags)
+        val result = aiService.chat(query, tags, repoId = "anutu-repo")
 
         assertEquals("Anutu is a god.", result.answer)
         assertEquals(2, result.toolCalls.size)

@@ -6,16 +6,14 @@ import org.springframework.http.MediaType
 import org.springframework.web.servlet.function.ServerResponse
 import org.springframework.web.servlet.function.paramOrNull
 import org.springframework.web.servlet.function.router
-import se.djupfeldt.paperduck.AiService
-import se.djupfeldt.paperduck.ChatMessage
-import se.djupfeldt.paperduck.KnowledgeService
-import se.djupfeldt.paperduck.TagService
+import se.djupfeldt.paperduck.*
 
 @Configuration
 class RouterConfiguration(
     private val aiService: AiService,
     private val tagService: TagService,
-    private val knowledgeService: KnowledgeService
+    private val knowledgeService: KnowledgeService,
+    private val properties: PaperduckProperties
 ) {
 
     @Bean
@@ -25,7 +23,11 @@ class RouterConfiguration(
             val question = body.question ?: ""
             val tags = body.tags?.toSet() ?: emptySet()
             val history = body.history ?: emptyList()
-            aiService.chat(question, tags, history).let { ServerResponse.ok().body(it) }
+            val repoId = body.repoId
+            aiService.chat(question, tags, history, repoId).let { ServerResponse.ok().body(it) }
+        }
+        GET("/repositories") {
+            ServerResponse.ok().body(properties.repositories.map { mapOf("id" to it.id, "name" to it.name) })
         }
         GET("/tags") {
             ServerResponse.ok().body(tagService.getTags())
@@ -37,7 +39,8 @@ class RouterConfiguration(
         }
         GET("/knowledge/{document}") { request ->
             val document = request.pathVariable("document")
-            val knowledge = knowledgeService.getKnowledge(document)
+            val repoId = request.paramOrNull("repoId")
+            val knowledge = knowledgeService.getKnowledge(document, repoId)
             if (knowledge != null) {
                 ServerResponse.ok()
                     .contentType(MediaType.parseMediaType("text/html;charset=UTF-8"))
@@ -52,5 +55,6 @@ class RouterConfiguration(
 data class AskRequest(
     val question: String?,
     val tags: List<String>?,
-    val history: List<ChatMessage>?
+    val history: List<ChatMessage>?,
+    val repoId: String?
 )
