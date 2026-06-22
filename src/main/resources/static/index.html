@@ -262,6 +262,25 @@
             color: var(--coffee-dark);
             text-decoration-color: var(--coffee-dark);
         }
+
+        footer {
+            margin-top: 60px;
+            text-align: center;
+            font-size: 0.85em;
+            color: var(--coffee-light);
+            border-top: 1px solid var(--border-soft);
+            padding-top: 20px;
+        }
+
+        footer a {
+            color: var(--coffee-medium);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -301,6 +320,10 @@
             <div id="popup-body"></div>
         </div>
     </div>
+
+    <footer>
+        &copy; 2026 Oscar Djupfeldt | <a href="https://github.com/ozsie/paperduck" target="_blank">github.com/ozsie/paperduck</a>
+    </footer>
 
     <script>
         const historyDiv = document.getElementById('history');
