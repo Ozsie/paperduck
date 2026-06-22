@@ -9,15 +9,12 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.messages.Message
-import org.springframework.context.ApplicationContext
-import org.springframework.core.io.ByteArrayResource
 
 class AiServiceTest {
 
     private lateinit var chatClient: ChatClient
     private lateinit var writingTools: WritingTools
     private lateinit var gitHubService: GitHubService
-    private lateinit var context: ApplicationContext
     private lateinit var tagService: TagService
     private lateinit var aiService: AiService
 
@@ -25,14 +22,9 @@ class AiServiceTest {
     fun setUp() {
         chatClient = mock(ChatClient::class.java)
         gitHubService = mock(GitHubService::class.java)
-        context = mock(ApplicationContext::class.java)
-
-        // Mock tags.md resource
-        val tagsResource = ByteArrayResource("tag1, tag2".toByteArray())
-        `when`(context.getResource("classpath:tags.md")).thenReturn(tagsResource)
 
         writingTools = WritingTools(gitHubService)
-        tagService = TagService(context)
+        tagService = TagService(gitHubService)
         aiService = AiService(chatClient, writingTools, tagService)
     }
 

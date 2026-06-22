@@ -184,7 +184,6 @@
         .selected-tag-badge .remove-tag { cursor: pointer; opacity: 0.8; font-size: 1.1em; }
         .selected-tag-badge .remove-tag:hover { opacity: 1; }
         
-        #add-tag-area { display: flex; gap: 10px; }
         #repo-area { display: flex; align-items: center; gap: 12px; }
         #repo-area label {
             font-size: 0.9em;
@@ -212,18 +211,6 @@
         }
         #repo-select:focus {
             border-color: var(--coffee-light);
-        }
-        #new-tag { flex-grow: 1; }
-        
-        #add-tag-btn { 
-            background-color: transparent; 
-            color: var(--coffee-medium); 
-            border: 1px solid var(--coffee-medium); 
-            padding: 10px 20px;
-        }
-        
-        #add-tag-btn:hover { 
-            background-color: var(--cream);
         }
 
         #options-area {
@@ -347,10 +334,6 @@
                 <div id="tags-list"></div>
             </div>
         </div>
-        <div id="add-tag-area">
-            <input type="text" id="new-tag" placeholder="New tag..." autocomplete="off">
-            <button id="add-tag-btn">Add Tag</button>
-        </div>
         <div id="options-area">
             <input type="checkbox" id="include-history" checked>
             <label for="include-history">Include chat history</label>
@@ -382,8 +365,6 @@
         const selectedTagsContainer = document.getElementById('selected-tags-container');
         const questionInput = document.getElementById('question');
         const sendBtn = document.getElementById('send-btn');
-        const newTagInput = document.getElementById('new-tag');
-        const addTagBtn = document.getElementById('add-tag-btn');
         const repoSelect = document.getElementById('repo-select');
         const includeHistoryCheckbox = document.getElementById('include-history');
         const popupOverlay = document.getElementById('popup-overlay');
@@ -401,6 +382,11 @@
                 const response = await fetch('/repositories');
                 repositories = await response.json();
                 renderRepositories();
+                
+                if (repositories.length > 0) {
+                    repoSelect.value = repositories[0].id;
+                    await loadTags(repositories[0].id);
+                }
             } catch (error) {
                 console.error('Error loading repositories:', error);
             }
@@ -417,10 +403,20 @@
         }
 
         // Fetch and display tags
-        async function loadTags() {
+        async function loadTags(repoId) {
             try {
-                const response = await fetch('/tags');
+                const url = repoId ? `/tags?repoId=${encodeURIComponent(repoId)}` : '/tags';
+                const response = await fetch(url);
                 allTags = await response.json();
+                
+                // Clear selected tags that are no longer available
+                const availableTags = new Set(allTags);
+                selectedTags.forEach(tag => {
+                    if (!availableTags.has(tag)) {
+                        selectedTags.delete(tag);
+                    }
+                });
+                
                 renderTags();
                 renderSelectedTags();
             } catch (error) {
@@ -571,25 +567,6 @@
             }
         }
 
-        async function addTag() {
-            const tag = newTagInput.value.trim();
-            if (!tag) return;
-
-            try {
-                const response = await fetch(`/tags/${encodeURIComponent(tag)}`, {
-                    method: 'PUT'
-                });
-                if (response.ok) {
-                    newTagInput.value = '';
-                    await loadTags();
-                } else {
-                    console.error('Failed to add tag');
-                }
-            } catch (error) {
-                console.error('Error adding tag:', error);
-            }
-        }
-
         // Popup logic
         async function showKnowledgePopup(url) {
             try {
@@ -642,13 +619,11 @@
             if (e.key === 'Enter') sendQuestion();
         });
 
-        addTagBtn.addEventListener('click', addTag);
-        newTagInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addTag();
-        });
-
-        loadTags();
         loadRepositories();
+        
+        repoSelect.addEventListener('change', () => {
+            loadTags(repoSelect.value);
+        });
     </script>
 </body>
 </html>

@@ -29,13 +29,9 @@ class RouterConfiguration(
         GET("/repositories") {
             ServerResponse.ok().body(properties.repositories.map { mapOf("id" to it.id, "name" to it.name) })
         }
-        GET("/tags") {
-            ServerResponse.ok().body(tagService.getTags())
-        }
-        PUT("/tags/{tag}") { request ->
-            val tag = request.pathVariable("tag")
-            tagService.addTag(tag)
-            ServerResponse.ok().body(tag)
+        GET("/tags") { request ->
+            val repoId = request.paramOrNull("repoId")
+            ServerResponse.ok().body(tagService.getTags(repoId))
         }
         GET("/knowledge/{document}") { request ->
             val document = request.pathVariable("document")

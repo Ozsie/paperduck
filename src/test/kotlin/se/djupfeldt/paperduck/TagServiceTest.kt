@@ -1,57 +1,30 @@
 package se.djupfeldt.paperduck
 
-import java.io.ByteArrayInputStream
-import java.nio.file.Files
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import org.springframework.core.io.Resource
-import org.springframework.core.io.ResourceLoader
 
 class TagServiceTest {
 
     @Test
-    fun `addTag should append tag to file`() {
-        val tempFile = Files.createTempFile("tags", ".md").toFile()
-        tempFile.writeText("tag1, tag2")
+    fun `getTags should include remote tags when repoId is provided`() {
+        val gitHubService = mock(GitHubService::class.java)
+        val remoteContent = "remote1, remote2, local1"
 
-        val resourceLoader = mock(ResourceLoader::class.java)
-        val resource = mock(Resource::class.java)
+        `when`(gitHubService.getFileContent(null, "tags", "repo1")).thenReturn(remoteContent)
 
-        `when`(resourceLoader.getResource("classpath:tags.md")).thenReturn(resource)
-        `when`(resource.file).thenReturn(tempFile)
+        val tagService = TagService(gitHubService)
+        val tags = tagService.getTags("repo1")
 
-        val tagService = TagService(resourceLoader)
-        tagService.addTag("tag3")
-
-        assertEquals("tag1, tag2, tag3", tempFile.readText())
-        tempFile.delete()
+        assertEquals(listOf("remote1", "remote2", "local1"), tags)
     }
 
     @Test
-    fun `getTags should return list of tags from resources`() {
-        val resourceLoader = mock(ResourceLoader::class.java)
-        val resource = mock(Resource::class.java)
-        val content = "tag1, tag2, tag3"
-
-        `when`(resourceLoader.getResource("classpath:tags.md")).thenReturn(resource)
-        `when`(resource.inputStream).thenReturn(ByteArrayInputStream(content.toByteArray()))
-
-        val tagService = TagService(resourceLoader)
-        val tags = tagService.getTags()
-
-        assertEquals(listOf("tag1", "tag2", "tag3"), tags)
-    }
-
-    @Test
-    fun `getTags should return empty list on error`() {
-        val resourceLoader = mock(ResourceLoader::class.java)
-        `when`(resourceLoader.getResource("classpath:tags.md")).thenThrow(RuntimeException("Error"))
-
-        val tagService = TagService(resourceLoader)
-        val tags = tagService.getTags()
-
+    fun `getTags should return empty list when no repoId provided`() {
+        val gitHubService = mock(GitHubService::class.java)
+        val tagService = TagService(gitHubService)
+        val tags = tagService.getTags(null)
         assertEquals(emptyList<String>(), tags)
     }
 }

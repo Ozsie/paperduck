@@ -65,11 +65,11 @@ class RouterConfigurationTest {
     }
 
     @Test
-    fun `GET tags should return available tags`() {
+    fun `GET tags should return available tags with repoId`() {
         val tags = listOf("tag1", "tag2")
-        `when`(tagService.getTags()).thenReturn(tags)
+        `when`(tagService.getTags("anutu")).thenReturn(tags)
 
-        mockMvc.perform(get("/tags"))
+        mockMvc.perform(get("/tags").param("repoId", "anutu"))
             .andExpect(status().isOk)
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$[0]").value("tag1"))

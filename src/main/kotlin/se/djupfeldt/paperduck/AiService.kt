@@ -16,7 +16,7 @@ class AiService(
         try {
             writingTools.invocations.clear()
             writingTools.currentRepoId = repoId
-            val call = callAI(query, tags, history)
+            val call = callAI(query, tags, history, repoId)
             val answer = call.content()
             val toolInvocations = writingTools.invocations.toList()
             val tagsUsed = toolInvocations.flatMap { it.tags }.distinct()
@@ -35,7 +35,7 @@ class AiService(
         }
     }
 
-    fun callAI(query: String, tags: Set<String>, history: List<ChatMessage> = emptyList()): ChatClient.CallResponseSpec {
+    fun callAI(query: String, tags: Set<String>, history: List<ChatMessage> = emptyList(), repoId: String? = null): ChatClient.CallResponseSpec {
         val requestedTags = if (tags.isNotEmpty()) "\nRequested tags are: ${tags.joinToString(", ")}." else ""
         val systemPrompt = """
             You are a helpful assistant for writing novels and short stories.
@@ -48,8 +48,7 @@ class AiService(
             
             DO NOT include any citations or references in the format [1], [2], etc., or use any built-in citation features.
             
-            Select appropriate tags from the available tags: ${tagService.getTags().joinToString(", ")}.
-            You may create new tags if more information is needed.$requestedTags
+            Select appropriate tags from the available tags: ${tagService.getTags(repoId).joinToString(", ")}.$requestedTags
         """.trimIndent()
         val chatQuery = query.ifBlank { "Vad handlar dessa tags om?" }
         val prompt = chatClient.prompt()

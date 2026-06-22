@@ -48,9 +48,13 @@ class GitHubService(
         }
     }
 
-    fun getFileContent(directory: String, fileName: String, repoId: String? = null): String? {
+    fun getFileContent(directory: String?, fileName: String, repoId: String? = null): String? {
         val repo = getRepo(repoId)
-        val url = "${repo.rawUrl}/$directory/$fileName"
+        val url = if (directory != null) {
+            "${repo.rawUrl}/$directory/$fileName"
+        } else {
+            "${repo.rawUrl}/$fileName"
+        }
         log.info("Fetching file content from GitHub: $url")
         return try {
             restTemplate.getForObject(url, String::class.java)

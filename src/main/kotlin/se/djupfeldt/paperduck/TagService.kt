@@ -1,48 +1,23 @@
 package se.djupfeldt.paperduck
 
-import org.springframework.core.io.ResourceLoader
 import org.springframework.stereotype.Service
 
 @Service
-class TagService(private val resourceLoader: ResourceLoader) {
+class TagService(
+    private val gitHubService: GitHubService
+) {
     private val log = org.slf4j.LoggerFactory.getLogger(TagService::class.java)
-    fun getTags(): List<String> = try {
-        val resource = resourceLoader.getResource("classpath:tags.md")
-        resource.inputStream.bufferedReader().use { reader ->
-            reader.readLine()?.split(",")?.map { it.trim().lowercase() }?.filter { it.isNotEmpty() }
-        } ?: emptyList()
-    } catch (e: Exception) {
-        log.error("Failed to load tags", e)
-        emptyList()
+
+    fun getTags(repoId: String? = null): List<String> {
+        val remoteTags = if (repoId != null) getRemoteTags(repoId) else emptyList()
+        return remoteTags.distinct()
     }
 
-    fun addTag(tag: String) {
-        try {
-            val resource = resourceLoader.getResource("classpath:tags.md")
-            val file = resource.file
-            log.info("Attempting to write to file: ${file.absolutePath}")
-            val content = file.readText()
-
-            val updatedContent = if (content.trim().isNotEmpty() && !content.trim().endsWith(",")) {
-                "$content, ${tag.lowercase()}"
-            } else {
-                "${content.trim()}${tag.lowercase()}"
-            }
-
-            file.writeText(updatedContent)
-            log.info("Successfully added tag '${tag.lowercase()}'.")
-
-            // Also try to write to src/main/resources if we are in a development environment
-            if (file.absolutePath.contains("/build/resources/main/")) {
-                val srcPath = file.absolutePath.replace("/build/resources/main/", "/src/main/resources/")
-                val srcFile = java.io.File(srcPath)
-                if (srcFile.exists()) {
-                    srcFile.writeText(updatedContent)
-                    log.info("Also updated source file: $srcPath")
-                }
-            }
-        } catch (e: Exception) {
-            log.error("Failed to add tag to file", e)
-        }
+    private fun getRemoteTags(repoId: String): List<String> = try {
+        val content = gitHubService.getFileContent(null, "tags", repoId)
+        content?.split(",")?.map { it.trim().lowercase() }?.filter { it.isNotEmpty() } ?: emptyList()
+    } catch (e: Exception) {
+        log.error("Failed to load remote tags for repo $repoId", e)
+        emptyList()
     }
 }
