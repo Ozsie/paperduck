@@ -4,50 +4,189 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paperduck Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200..900;1,200..900&family=Karla:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 10px; }
-        #history { border: 1px solid #ccc; height: 400px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
-        .message { margin-bottom: 10px; padding: 8px; border-radius: 5px; }
-        .user { background-color: #e3f2fd; align-self: flex-end; }
-        .ai { background-color: #f5f5f5; }
-        .message pre { background-color: #eee; padding: 10px; border-radius: 4px; overflow-x: auto; }
-        .message code { font-family: monospace; background-color: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 3px; }
-        .message p { margin: 5px 0; }
-        .message ul, .message ol { margin-left: 20px; }
-        #controls { display: flex; flex-direction: column; gap: 10px; }
+        :root {
+            --paper: #f9f4ef;
+            --coffee-dark: #3d2b1f;
+            --coffee-medium: #6f4e37;
+            --coffee-light: #a67b5b;
+            --cream: #f2e8cf;
+            --ink: #2c2c2c;
+            --border-soft: #dcd0c0;
+        }
+
+        body { 
+            font-family: 'Karla', sans-serif; 
+            max-width: 850px; 
+            margin: 0 auto; 
+            padding: 40px 20px; 
+            background-color: var(--paper);
+            color: var(--ink);
+            line-height: 1.6;
+        }
+
+        h1 { 
+            font-family: 'Crimson Pro', serif; 
+            font-weight: 700; 
+            color: var(--coffee-dark); 
+            text-align: center;
+            margin-bottom: 40px;
+            letter-spacing: -0.02em;
+        }
+
+        #history { 
+            border: 1px solid var(--border-soft); 
+            height: 500px; 
+            overflow-y: auto; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .message { 
+            margin-bottom: 20px; 
+            padding: 12px 18px; 
+            border-radius: 12px; 
+            max-width: 85%;
+        }
+
+        .user { 
+            background-color: var(--cream); 
+            align-self: flex-end; 
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+            color: var(--coffee-dark);
+        }
+
+        .ai { 
+            background-color: #ffffff; 
+            border: 1px solid var(--border-soft);
+            border-bottom-left-radius: 2px;
+        }
+
+        .message pre { 
+            background-color: #fcfaf8; 
+            padding: 15px; 
+            border-radius: 6px; 
+            overflow-x: auto; 
+            border: 1px solid var(--border-soft);
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .message code { 
+            font-family: 'Courier New', Courier, monospace; 
+            background-color: rgba(111, 78, 55, 0.08); 
+            padding: 2px 5px; 
+            border-radius: 3px; 
+        }
+
+        .message p { margin: 8px 0; }
+        .message ul, .message ol { margin-left: 24px; }
+        
+        .message h1, .message h2, .message h3 {
+            font-family: 'Crimson Pro', serif;
+            color: var(--coffee-dark);
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        #controls { display: flex; flex-direction: column; gap: 15px; }
         #input-area { display: flex; gap: 10px; }
-        #question { flex-grow: 1; padding: 8px; }
+        
+        input[type="text"] {
+            font-family: 'Karla', sans-serif;
+            padding: 12px; 
+            border: 1px solid var(--border-soft); 
+            border-radius: 6px;
+            background-color: white;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--coffee-light);
+        }
+
+        #question { flex-grow: 1; }
+        
+        button {
+            font-family: 'Karla', sans-serif;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #send-btn {
+            background-color: var(--coffee-medium);
+            color: white;
+        }
+
+        #send-btn:hover {
+            background-color: var(--coffee-dark);
+        }
+
         #tags-area { position: relative; display: inline-block; width: 100%; }
+        
         #tags-dropdown-btn { 
-            padding: 8px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; 
-            background: white; display: flex; gap: 5px; min-height: 20px; align-items: center;
+            padding: 10px; border: 1px solid var(--border-soft); border-radius: 6px; cursor: pointer; 
+            background: white; display: flex; gap: 5px; min-height: 24px; align-items: center;
         }
+        
         #selected-tags-container {
-            display: flex; flex-wrap: wrap; gap: 5px; flex-grow: 1;
+            display: flex; flex-wrap: wrap; gap: 8px; flex-grow: 1;
+            font-size: 0.9em;
+            color: #888;
         }
-        #tags-dropdown-btn:after { content: '▼'; margin-left: auto; font-size: 0.8em; color: #777; }
+        
+        #tags-dropdown-btn:after { content: '▼'; margin-left: auto; font-size: 0.8em; color: var(--coffee-light); }
+        
         #tags-menu { 
-            display: none; position: absolute; top: 100%; left: 0; right: 0; 
-            border: 1px solid #ccc; background: white; z-index: 10; max-height: 200px; overflow-y: auto; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none; position: absolute; bottom: 100%; left: 0; right: 0; margin-bottom: 5px;
+            border: 1px solid var(--border-soft); background: white; z-index: 10; max-height: 250px; overflow-y: auto; 
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+            border-radius: 8px;
         }
+        
         #tags-menu.show { display: block; }
-        #tag-search { width: 100%; box-sizing: border-box; padding: 8px; border: none; border-bottom: 1px solid #eee; outline: none; }
-        .tag-item { padding: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .tag-item:hover { background-color: #f5f5f5; }
+        #tag-search { width: 100%; box-sizing: border-box; padding: 12px; border: none; border-bottom: 1px solid var(--border-soft); }
+        
+        .tag-item { padding: 10px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s; }
+        .tag-item:hover { background-color: var(--paper); }
         .tag-item input { pointer-events: none; }
+        
         .selected-tag-badge { 
-            background-color: #2196f3; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; 
-            display: flex; align-items: center; gap: 4px;
+            background-color: var(--coffee-light); color: white; padding: 3px 10px; border-radius: 15px; font-size: 0.85em; 
+            display: flex; align-items: center; gap: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
-        .selected-tag-badge .remove-tag { cursor: pointer; font-weight: bold; }
-        #add-tag-area { display: flex; gap: 10px; margin-top: 5px; }
-        #new-tag { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        #add-tag-btn { padding: 8px 16px; background-color: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        #add-tag-btn:hover { background-color: #45a049; }
-        .loading { font-style: italic; color: #666; }
-        .tool-calls, .tags-used { font-size: 0.8em; color: #777; margin-top: 4px; }
+        
+        .selected-tag-badge .remove-tag { cursor: pointer; opacity: 0.8; font-size: 1.1em; }
+        .selected-tag-badge .remove-tag:hover { opacity: 1; }
+        
+        #add-tag-area { display: flex; gap: 10px; }
+        #new-tag { flex-grow: 1; }
+        
+        #add-tag-btn { 
+            background-color: transparent; 
+            color: var(--coffee-medium); 
+            border: 1px solid var(--coffee-medium); 
+        }
+        
+        #add-tag-btn:hover { 
+            background-color: var(--cream);
+        }
+        
+        .loading { font-style: italic; color: var(--coffee-light); text-align: center; padding: 10px; }
+        .tool-calls, .tags-used { font-size: 0.75em; color: var(--coffee-light); margin-top: 6px; font-style: italic; }
         
         /* Popup Styles */
         #popup-overlay {
@@ -57,28 +196,55 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(61, 43, 31, 0.4);
+            backdrop-filter: blur(2px);
             z-index: 1000;
             justify-content: center;
             align-items: center;
         }
+        
         #popup-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            max-width: 80%;
-            max-height: 80%;
+            background-color: var(--paper);
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 85vh;
             overflow-y: auto;
             position: relative;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 1px solid var(--border-soft);
         }
+
+        #popup-body {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.1em;
+            color: var(--ink);
+        }
+        
         #popup-close {
             position: absolute;
-            top: 10px;
-            right: 15px;
+            top: 20px;
+            right: 25px;
             cursor: pointer;
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 28px;
+            color: var(--coffee-light);
+            transition: color 0.2s;
+        }
+
+        #popup-close:hover {
+            color: var(--coffee-dark);
+        }
+
+        a {
+            color: var(--coffee-medium);
+            text-decoration-color: var(--border-soft);
+            transition: all 0.2s;
+        }
+
+        a:hover {
+            color: var(--coffee-dark);
+            text-decoration-color: var(--coffee-dark);
         }
     </style>
 </head>
