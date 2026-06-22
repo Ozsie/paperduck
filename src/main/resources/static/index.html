@@ -18,10 +18,34 @@
         #controls { display: flex; flex-direction: column; gap: 10px; }
         #input-area { display: flex; gap: 10px; }
         #question { flex-grow: 1; padding: 8px; }
-        #tags-area { display: flex; flex-wrap: wrap; gap: 5px; border: 1px solid #eee; padding: 5px; }
-        .tag-checkbox { display: none; }
-        .tag-label { padding: 4px 8px; border: 1px solid #ccc; border-radius: 15px; cursor: pointer; font-size: 0.9em; }
-        .tag-checkbox:checked + .tag-label { background-color: #2196f3; color: white; border-color: #2196f3; }
+        #tags-area { position: relative; display: inline-block; width: 100%; }
+        #tags-dropdown-btn { 
+            padding: 8px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; 
+            background: white; display: flex; gap: 5px; min-height: 20px; align-items: center;
+        }
+        #selected-tags-container {
+            display: flex; flex-wrap: wrap; gap: 5px; flex-grow: 1;
+        }
+        #tags-dropdown-btn:after { content: '▼'; margin-left: auto; font-size: 0.8em; color: #777; }
+        #tags-menu { 
+            display: none; position: absolute; top: 100%; left: 0; right: 0; 
+            border: 1px solid #ccc; background: white; z-index: 10; max-height: 200px; overflow-y: auto; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #tags-menu.show { display: block; }
+        #tag-search { width: 100%; box-sizing: border-box; padding: 8px; border: none; border-bottom: 1px solid #eee; outline: none; }
+        .tag-item { padding: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .tag-item:hover { background-color: #f5f5f5; }
+        .tag-item input { pointer-events: none; }
+        .selected-tag-badge { 
+            background-color: #2196f3; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; 
+            display: flex; align-items: center; gap: 4px;
+        }
+        .selected-tag-badge .remove-tag { cursor: pointer; font-weight: bold; }
+        #add-tag-area { display: flex; gap: 10px; margin-top: 5px; }
+        #new-tag { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        #add-tag-btn { padding: 8px 16px; background-color: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        #add-tag-btn:hover { background-color: #45a049; }
         .loading { font-style: italic; color: #666; }
         .tool-calls, .tags-used { font-size: 0.8em; color: #777; margin-top: 4px; }
         
@@ -67,7 +91,13 @@
 
     <div id="controls">
         <div id="tags-area">
-            <span>Loading tags...</span>
+            <div id="tags-dropdown-btn">
+                <span id="selected-tags-container">Select tags...</span>
+            </div>
+            <div id="tags-menu">
+                <input type="text" id="tag-search" placeholder="Search tags..." autocomplete="off">
+                <div id="tags-list"></div>
+            </div>
         </div>
         <div id="add-tag-area">
             <input type="text" id="new-tag" placeholder="New tag..." autocomplete="off">
@@ -89,6 +119,11 @@
     <script>
         const historyDiv = document.getElementById('history');
         const tagsArea = document.getElementById('tags-area');
+        const tagsDropdownBtn = document.getElementById('tags-dropdown-btn');
+        const tagsMenu = document.getElementById('tags-menu');
+        const tagsList = document.getElementById('tags-list');
+        const tagSearch = document.getElementById('tag-search');
+        const selectedTagsContainer = document.getElementById('selected-tags-container');
         const questionInput = document.getElementById('question');
         const sendBtn = document.getElementById('send-btn');
         const newTagInput = document.getElementById('new-tag');
@@ -97,26 +132,95 @@
         const popupBody = document.getElementById('popup-body');
         const popupClose = document.getElementById('popup-close');
 
+        let allTags = [];
+        let selectedTags = new Set();
+
         // Fetch and display tags
         async function loadTags() {
             try {
                 const response = await fetch('/tags');
-                const tags = await response.json();
-                tagsArea.innerHTML = '<strong>Tags:</strong> ';
-                tags.forEach(tag => {
-                    const id = `tag-${tag}`;
-                    const container = document.createElement('span');
-                    container.innerHTML = `
-                        <input type="checkbox" class="tag-checkbox" id="${id}" value="${tag}">
-                        <label class="tag-label" for="${id}">${tag}</label>
-                    `;
-                    tagsArea.appendChild(container);
-                });
+                allTags = await response.json();
+                renderTags();
+                renderSelectedTags();
             } catch (error) {
                 console.error('Error loading tags:', error);
-                tagsArea.innerHTML = 'Error loading tags.';
+                tagsList.innerHTML = '<div class="tag-item">Error loading tags.</div>';
             }
         }
+
+        function renderTags() {
+            const filter = tagSearch.value.toLowerCase();
+            tagsList.innerHTML = '';
+            
+            const filteredTags = allTags.filter(tag => tag.toLowerCase().includes(filter));
+            
+            if (filteredTags.length === 0) {
+                tagsList.innerHTML = '<div class="tag-item">No tags found.</div>';
+                return;
+            }
+
+            filteredTags.forEach(tag => {
+                const item = document.createElement('div');
+                item.className = 'tag-item';
+                const isChecked = selectedTags.has(tag);
+                item.innerHTML = `
+                    <input type="checkbox" ${isChecked ? 'checked' : ''}>
+                    <span>${tag}</span>
+                `;
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleTag(tag);
+                };
+                tagsList.appendChild(item);
+            });
+        }
+
+        function toggleTag(tag) {
+            if (selectedTags.has(tag)) {
+                selectedTags.delete(tag);
+            } else {
+                selectedTags.add(tag);
+            }
+            renderTags();
+            renderSelectedTags();
+        }
+
+        function renderSelectedTags() {
+            if (selectedTags.size === 0) {
+                selectedTagsContainer.innerHTML = 'Select tags...';
+                return;
+            }
+            
+            selectedTagsContainer.innerHTML = '';
+            selectedTags.forEach(tag => {
+                const badge = document.createElement('span');
+                badge.className = 'selected-tag-badge';
+                badge.innerHTML = `
+                    ${tag}
+                    <span class="remove-tag">&times;</span>
+                `;
+                badge.querySelector('.remove-tag').onclick = (e) => {
+                    e.stopPropagation();
+                    toggleTag(tag);
+                };
+                selectedTagsContainer.appendChild(badge);
+            });
+        }
+
+        tagsDropdownBtn.onclick = (e) => {
+            tagsMenu.classList.toggle('show');
+            if (tagsMenu.classList.contains('show')) {
+                tagSearch.focus();
+            }
+            e.stopPropagation();
+        };
+
+        tagSearch.oninput = () => renderTags();
+        tagSearch.onclick = (e) => e.stopPropagation();
+
+        window.onclick = () => {
+            tagsMenu.classList.remove('show');
+        };
 
         function appendMessage(role, text, toolCalls = [], tagsUsed = []) {
             const msgDiv = document.createElement('div');
@@ -148,10 +252,9 @@
 
         async function sendQuestion() {
             const question = questionInput.value.trim();
-            const selectedTags = Array.from(document.querySelectorAll('.tag-checkbox:checked'))
-                .map(cb => cb.value);
+            const tagsArray = Array.from(selectedTags);
 
-            if (!question && selectedTags.length === 0) return;
+            if (!question && tagsArray.length === 0) return;
 
             appendMessage('user', question || '(No question, tags selected)');
             questionInput.value = '';
@@ -162,7 +265,7 @@
             try {
                 const params = new URLSearchParams({
                     question: question,
-                    tags: selectedTags.join(',')
+                    tags: tagsArray.join(',')
                 });
                 const response = await fetch(`/ask?${params.toString()}`);
                 const result = await response.json();
