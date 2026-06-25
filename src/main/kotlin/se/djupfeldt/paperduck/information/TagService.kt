@@ -1,12 +1,13 @@
-package se.djupfeldt.paperduck
+package se.djupfeldt.paperduck.information
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class TagService(
     private val gitHubService: GitHubService
 ) {
-    private val log = org.slf4j.LoggerFactory.getLogger(TagService::class.java)
+    private val log = LoggerFactory.getLogger(TagService::class.java)
 
     fun getTags(repoId: String? = null): List<String> {
         val remoteTags = if (repoId != null) getRemoteTags(repoId) else emptyList()

@@ -1,4 +1,4 @@
-package se.djupfeldt.paperduck
+package se.djupfeldt.paperduck.ai
 
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
@@ -15,7 +15,7 @@ class AiConfig {
 
     @Bean
     @ConditionalOnProperty(name = ["paperduck.ai.service"], havingValue = "openai")
-    fun openAiChatClient(chatModel: OpenAiChatModel): ChatClient = ChatClient.builder(chatModel)
+    fun openAiChatClient(chatModel: OpenAiChatModel) = ChatClient.builder(chatModel)
         .defaultAdvisors(SimpleLoggerAdvisor())
         .build().also {
             log.info("Using OpenAI chat client")
@@ -23,7 +23,7 @@ class AiConfig {
 
     @Bean
     @ConditionalOnProperty(name = ["paperduck.ai.service"], havingValue = "mistral", matchIfMissing = true)
-    fun mistralAiChatClient(chatModel: MistralAiChatModel): ChatClient = ChatClient.builder(chatModel)
+    fun mistralAiChatClient(chatModel: MistralAiChatModel) = ChatClient.builder(chatModel)
         .defaultAdvisors(SimpleLoggerAdvisor())
         .build().also {
             log.info("Using Mistral AI chat client")

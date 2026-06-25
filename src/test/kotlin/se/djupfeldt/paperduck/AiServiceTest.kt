@@ -9,6 +9,11 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.messages.Message
+import se.djupfeldt.paperduck.ai.AiService
+import se.djupfeldt.paperduck.ai.ChatMessage
+import se.djupfeldt.paperduck.ai.WritingTools
+import se.djupfeldt.paperduck.information.GitHubService
+import se.djupfeldt.paperduck.information.TagService
 
 class AiServiceTest {
 
@@ -96,7 +101,7 @@ class AiServiceTest {
     fun `chat should include history in prompt`() {
         val query = "What was my last question?"
         val history = listOf(ChatMessage("user", "Who is Anutu?"), ChatMessage("assistant", "Anutu is a god."))
-        
+
         val promptSpec = mock(ChatClient.ChatClientRequestSpec::class.java)
         val callResponseSpec = mock(ChatClient.CallResponseSpec::class.java)
 
@@ -111,7 +116,7 @@ class AiServiceTest {
         val result = aiService.chat(query, emptySet(), history)
 
         assertEquals("Your last question was about Anutu.", result.answer)
-        
+
         // Verify that messages were called at least twice (for the history)
         org.mockito.Mockito.verify(promptSpec, org.mockito.Mockito.atLeast(2)).messages(any<Message>())
     }

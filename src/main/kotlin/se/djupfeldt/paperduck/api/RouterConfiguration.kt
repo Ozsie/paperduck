@@ -4,9 +4,14 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.MediaType
 import org.springframework.web.servlet.function.ServerResponse
+import org.springframework.web.servlet.function.body
 import org.springframework.web.servlet.function.paramOrNull
 import org.springframework.web.servlet.function.router
 import se.djupfeldt.paperduck.*
+import se.djupfeldt.paperduck.ai.AiService
+import se.djupfeldt.paperduck.ai.ChatMessage
+import se.djupfeldt.paperduck.information.KnowledgeService
+import se.djupfeldt.paperduck.information.TagService
 
 @Configuration
 class RouterConfiguration(
@@ -19,7 +24,7 @@ class RouterConfiguration(
     @Bean
     fun askRouter() = router {
         POST("/ask") { request ->
-            val body = request.body(AskRequest::class.java)
+            val body = request.body<AskRequest>()
             val question = body.question ?: ""
             val tags = body.tags?.toSet() ?: emptySet()
             val history = body.history ?: emptyList()

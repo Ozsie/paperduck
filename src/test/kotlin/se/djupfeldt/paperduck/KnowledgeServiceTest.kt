@@ -1,12 +1,13 @@
 package se.djupfeldt.paperduck
 
-import java.io.File
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import se.djupfeldt.paperduck.information.GitHubService
+import se.djupfeldt.paperduck.information.KnowledgeService
 
 class KnowledgeServiceTest {
 

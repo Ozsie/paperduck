@@ -6,6 +6,7 @@ import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.mistralai.MistralAiChatModel
 import org.springframework.ai.openai.OpenAiChatModel
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
+import se.djupfeldt.paperduck.ai.AiConfig
 
 class AiConfigIntegrationTest {
 

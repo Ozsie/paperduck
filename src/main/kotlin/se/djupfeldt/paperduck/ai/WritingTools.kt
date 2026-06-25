@@ -1,8 +1,9 @@
-package se.djupfeldt.paperduck
+package se.djupfeldt.paperduck.ai
 
 import org.slf4j.LoggerFactory
 import org.springframework.ai.tool.annotation.Tool
 import org.springframework.stereotype.Component
+import se.djupfeldt.paperduck.information.GitHubService
 
 @Component
 class WritingTools(private val gitHubService: GitHubService) {

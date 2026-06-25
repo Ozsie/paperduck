@@ -1,4 +1,4 @@
-package se.djupfeldt.paperduck
+package se.djupfeldt.paperduck.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -8,7 +8,5 @@ import org.springframework.web.client.RestTemplate
 class HttpClientConfig {
 
     @Bean
-    fun restTemplate(): RestTemplate {
-        return RestTemplate()
-    }
+    fun restTemplate() = RestTemplate()
 }

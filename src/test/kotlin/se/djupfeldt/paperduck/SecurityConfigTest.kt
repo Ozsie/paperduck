@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.security.web.SecurityFilterChain
+import se.djupfeldt.paperduck.config.SecurityConfig
 
 class SecurityConfigTest {
 

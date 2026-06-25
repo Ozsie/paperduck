@@ -1,4 +1,4 @@
-package se.djupfeldt.paperduck
+package se.djupfeldt.paperduck.information
 
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser

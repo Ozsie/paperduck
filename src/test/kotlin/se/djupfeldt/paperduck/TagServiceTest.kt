@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import se.djupfeldt.paperduck.information.GitHubService
+import se.djupfeldt.paperduck.information.TagService
 
 class TagServiceTest {
 

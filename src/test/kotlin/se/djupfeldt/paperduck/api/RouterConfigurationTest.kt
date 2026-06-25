@@ -13,6 +13,10 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import se.djupfeldt.paperduck.*
+import se.djupfeldt.paperduck.ai.AiService
+import se.djupfeldt.paperduck.ai.ChatResult
+import se.djupfeldt.paperduck.information.KnowledgeService
+import se.djupfeldt.paperduck.information.TagService
 
 class RouterConfigurationTest {
 

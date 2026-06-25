@@ -5,8 +5,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import org.springframework.context.ApplicationContext
-import org.springframework.core.io.ByteArrayResource
+import se.djupfeldt.paperduck.ai.WritingTools
+import se.djupfeldt.paperduck.information.GitHubService
 
 class WritingToolsTest {
 

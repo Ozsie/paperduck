@@ -1,10 +1,11 @@
-package se.djupfeldt.paperduck
+package se.djupfeldt.paperduck.information
 
 import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import se.djupfeldt.paperduck.PaperduckProperties
 
 @Service
 class GitHubService(
@@ -20,14 +21,12 @@ class GitHubService(
         val download_url: String?
     )
 
-    private fun getRepo(repoId: String?): PaperduckProperties.RepositoryConfig {
-        return if (repoId == null) {
-            properties.repositories.firstOrNull() ?: throw IllegalStateException("No repositories configured")
-        } else {
-            properties.repositories.find { it.id == repoId }
-                ?: properties.repositories.firstOrNull()
-                ?: throw IllegalStateException("No repositories configured")
-        }
+    private fun getRepo(repoId: String?): PaperduckProperties.RepositoryConfig = if (repoId == null) {
+        properties.repositories.firstOrNull() ?: throw IllegalStateException("No repositories configured")
+    } else {
+        properties.repositories.find { it.id == repoId }
+            ?: properties.repositories.firstOrNull()
+            ?: throw IllegalStateException("No repositories configured")
     }
 
     fun listFiles(directory: String, repoId: String? = null): List<String> {

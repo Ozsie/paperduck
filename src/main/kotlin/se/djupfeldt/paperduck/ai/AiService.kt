@@ -1,8 +1,11 @@
-package se.djupfeldt.paperduck
+package se.djupfeldt.paperduck.ai
 
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
+import org.springframework.ai.chat.messages.AssistantMessage
+import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.stereotype.Service
+import se.djupfeldt.paperduck.information.TagService
 
 @Service
 class AiService(
@@ -56,8 +59,8 @@ class AiService(
 
         history.forEach { msg ->
             when (msg.role.lowercase()) {
-                "user" -> prompt.messages(org.springframework.ai.chat.messages.UserMessage(msg.content))
-                "assistant", "ai" -> prompt.messages(org.springframework.ai.chat.messages.AssistantMessage(msg.content))
+                "user" -> prompt.messages(UserMessage(msg.content))
+                "assistant", "ai" -> prompt.messages(AssistantMessage(msg.content))
             }
         }
 
